@@ -45,6 +45,13 @@ Last update: 2026-10-06.
   created (alias `prod`), web app + `.env.local` (gitignored) wired via
   `VITE_FIREBASE_*`, Firestore database (`europe-west1`), M-4 rules
   released, first hosting release at https://promptlens-prod.web.app
+- ~~Frame storage on Cloudflare R2~~ — done 2026-10-06 (`162579b`): private
+  bucket `promptlens-frames`, Worker routes `POST /frames` (auth) /
+  `GET /frames/:key`, `Entry.frameId` + journal thumbnails (8/8 probes OK)
+- ~~Version this tracker~~ — done 2026-10-06: this README lives in
+  `reymouhid95/claude-lab` (only `README.md` tracked, sub-repos ignored)
+- Revoke the current GitHub PAT once it is no longer needed (pushes use
+  `ghp_OK7lTO…` until then)
 - M-6 first full deploy — **split outcome** 2026-10-06:
   - ✅ Anonymous provider live (console), Gemini analysis live in
     production via Cloudflare Worker `promptlens-gemini` (free tier, no
