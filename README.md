@@ -50,8 +50,8 @@ Last update: 2026-10-06.
   `GET /frames/:key`, `Entry.frameId` + journal thumbnails (8/8 probes OK)
 - ~~Version this tracker~~ — done 2026-10-06: this README lives in
   `reymouhid95/claude-lab` (only `README.md` tracked, sub-repos ignored)
-- Revoke the current GitHub PAT once it is no longer needed (pushes use
-  `ghp_OK7lTO…` until then)
+- ~~Revoke the GitHub PAT used for lab pushes~~ — done 2026-10-06 (revoked
+  from the GitHub UI; the next push needs a fresh PAT)
 - M-6 first full deploy — **split outcome** 2026-10-06:
   - ✅ Anonymous provider live (console), Gemini analysis live in
     production via Cloudflare Worker `promptlens-gemini` (free tier, no
