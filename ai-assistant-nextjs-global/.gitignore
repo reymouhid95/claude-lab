@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# worker dev secrets — GEMINI_API_KEY lives here, never in git
+.dev.vars
+
 # vercel
 .vercel
 

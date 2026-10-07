@@ -15,6 +15,7 @@
 ai-assistant-nextjs-global/node_modules/
 ai-assistant-nextjs-global/.next/
 ai-assistant-nextjs-global/.env*
+ai-assistant-nextjs-global/.dev.vars
 ai-assistant/**/node_modules/
 ai-assistant/**/.env*
 ai-assistant/standalone-server/frames/

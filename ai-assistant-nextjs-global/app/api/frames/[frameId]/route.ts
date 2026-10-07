@@ -1,25 +1,30 @@
-import { NextResponse } from "next/server";
+import { env } from "cloudflare:workers";
 
-const FLASK_URL = process.env.FLASK_URL ?? "http://127.0.0.1:5001";
+const FRAME_ID = /^[0-9a-f]{32}\.[a-z0-9]+$/;
 
-export async function GET(_req: Request, ctx: RouteContext<"/api/frames/[frameId]">) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ frameId: string }> },
+) {
   const { frameId } = await ctx.params;
 
+  if (!FRAME_ID.test(frameId)) {
+    return Response.json({ error: "Identifiant invalide." }, { status: 400 });
+  }
+
   try {
-    const upstream = await fetch(`${FLASK_URL}/api/frames/${encodeURIComponent(frameId)}`, {
-      cache: "no-store",
-    });
-    if (!upstream.ok) {
-      return NextResponse.json({ error: "Frame introuvable." }, { status: upstream.status });
+    const object = await env.FRAMES.get(`assistant/${frameId}`);
+    if (!object) {
+      return Response.json({ error: "Frame introuvable." }, { status: 404 });
     }
-    const blob = await upstream.blob();
-    return new NextResponse(blob, {
+    return new Response(object.body, {
       headers: {
-        "Content-Type": upstream.headers.get("Content-Type") ?? "application/octet-stream",
+        "Content-Type": object.httpMetadata?.contentType ?? "application/octet-stream",
         "Cache-Control": "public, max-age=86400",
       },
     });
-  } catch {
-    return NextResponse.json({ error: "Frame injoignable." }, { status: 502 });
+  } catch (error) {
+    console.error("frames read failed:", error);
+    return Response.json({ error: "Frame injoignable." }, { status: 502 });
   }
 }

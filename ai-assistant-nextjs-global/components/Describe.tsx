@@ -29,7 +29,7 @@ export default function Describe({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: trimmed }),
     })
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ description?: unknown; error?: string }>)
       .then((data) => {
         if (isShotDescription(data.description)) {
           setDraft(data.description);

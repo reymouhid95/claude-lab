@@ -49,7 +49,7 @@ export default function Assistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, student_level: level, student_id: getStudentId() }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { response?: string; error?: string };
       setHistory((prev) => [
         ...prev,
         {

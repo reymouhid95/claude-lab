@@ -69,7 +69,7 @@ export default function Presets({
     let cancelled = false;
 
     fetch(`/api/presets?level=${level}`)
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ presets?: unknown }>)
       .then((data) => {
         if (cancelled) return;
         setState({

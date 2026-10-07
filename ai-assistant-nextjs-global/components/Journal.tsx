@@ -57,7 +57,7 @@ export default function Journal({
     if (production) params.set("production", production);
 
     fetch(`/api/journal?${params}`)
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<{ entries?: unknown }>)
       .then((data) => {
         if (cancelled) return;
         setEntries(Array.isArray(data.entries) ? data.entries : []);

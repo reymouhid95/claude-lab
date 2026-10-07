@@ -80,7 +80,10 @@ export default function ImageLab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageBase64: picked.base64, mimeType: OUTPUT_MIME }),
     })
-      .then((r) => r.json())
+      .then(
+        (r) =>
+          r.json() as Promise<{ description?: unknown; frameId?: unknown; error?: string }>,
+      )
       .then((data) => {
         if (isShotDescription(data.description) && typeof data.frameId === "string") {
           setDraft({ description: data.description, frameId: data.frameId });
