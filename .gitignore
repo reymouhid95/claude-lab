@@ -6,7 +6,14 @@
 !ai-assistant-nextjs-global/
 !ai-assistant-nextjs-global/**
 
+# AI Assistant — agent backend (the brain: agent, presets, tools)
+!ai-assistant/
+!ai-assistant/standalone-server/
+!ai-assistant/standalone-server/**
+
 # never commit build output or dependencies
 ai-assistant-nextjs-global/node_modules/
 ai-assistant-nextjs-global/.next/
 ai-assistant-nextjs-global/.env*
+ai-assistant/**/node_modules/
+ai-assistant/**/.env*
