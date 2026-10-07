@@ -168,7 +168,7 @@ export default function ImageLab({
         type="button"
         onClick={analyze}
         disabled={!picked || loading}
-        className="mt-3 flex min-h-11 items-center justify-center bg-amber px-4 text-[0.82rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+        className="mt-3 flex min-h-11 items-center justify-center bg-amber px-4 text-[0.82rem] font-semibold text-[#0e1418] transition duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
       >
         {loading ? "Analyse…" : "Analyser l'image"}
       </button>

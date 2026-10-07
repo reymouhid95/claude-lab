@@ -92,7 +92,7 @@ export default function Journal({
 
       <ol className="divide-y divide-white/10">
         {entries.map((e) => (
-          <li key={e.id} className="py-3.5">
+          <li key={e.id} className="py-3.5 transition-colors duration-150 hover:bg-white/[0.03]">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-[0.7rem] text-amber">
                 {SOURCE_LABEL[e.source] ?? e.source}

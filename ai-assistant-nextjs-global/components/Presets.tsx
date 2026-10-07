@@ -134,7 +134,10 @@ export default function Presets({
           </li>
         )}
         {visible.map((p) => (
-          <li key={p.id} className="group py-3.5">
+          <li
+            key={p.id}
+            className="group py-3.5 transition-colors duration-150 hover:bg-white/[0.03]"
+          >
             <div className="flex items-baseline gap-3">
               <h3 className="font-display text-[0.95rem] font-semibold leading-tight text-ivory">
                 {p.name}
@@ -142,7 +145,7 @@ export default function Presets({
               <button
                 type="button"
                 onClick={() => handleInsert(p)}
-                className={`ml-auto flex min-h-11 shrink-0 items-center border px-3 font-mono text-[0.7rem] transition-colors duration-150 ${
+                className={`ml-auto flex min-h-11 shrink-0 items-center border px-3 font-mono text-[0.7rem] transition duration-150 active:scale-[0.98] ${
                   insertedId === p.id
                     ? "border-amber bg-amber text-[#0e1418]"
                     : "border-white/15 text-mute hover:border-amber hover:text-amber"

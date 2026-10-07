@@ -85,12 +85,12 @@ export default function Chat({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Ta question sur le tournage, le cadrage, le montage…"
           disabled={loading}
-          className="min-w-0 flex-1 border border-white/15 bg-bezel px-4 py-3 text-[0.95rem] text-ivory placeholder:text-mute/80 focus:border-amber"
+          className="min-w-0 flex-1 border border-white/15 bg-bezel px-4 py-3 text-[0.95rem] text-ivory transition-colors duration-150 placeholder:text-mute/80 focus:border-amber"
         />
         <button
           type="submit"
           disabled={loading || !value.trim()}
-          className="shrink-0 bg-amber px-5 py-3 text-[0.9rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+          className="shrink-0 bg-amber px-5 py-3 text-[0.9rem] font-semibold text-[#0e1418] transition duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
         >
           {loading ? "…" : "Envoyer"}
         </button>

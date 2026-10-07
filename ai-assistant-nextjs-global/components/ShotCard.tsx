@@ -86,14 +86,14 @@ export default function ShotCard({
           type="button"
           onClick={save}
           disabled={state === "saving" || state === "saved"}
-          className="flex min-h-11 items-center bg-amber px-3 text-[0.8rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="flex min-h-11 items-center bg-amber px-3 text-[0.8rem] font-semibold text-[#0e1418] transition duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
         >
           {state === "saved" ? "enregistré" : state === "saving" ? "…" : "Enregistrer"}
         </button>
         <button
           type="button"
           onClick={onReset}
-          className="flex min-h-11 items-center border border-white/15 px-3 text-[0.8rem] text-mute transition-colors duration-150 hover:border-white/40 hover:text-ivory"
+          className="flex min-h-11 items-center border border-white/15 px-3 text-[0.8rem] text-mute transition duration-150 hover:border-white/40 hover:text-ivory active:scale-[0.98]"
         >
           Recommencer
         </button>
