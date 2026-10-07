@@ -4,17 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Chat, { type Message } from "./Chat";
 import Header, { type LevelId } from "./Header";
 import Presets from "./Presets";
-
-/** Identifiant anonyme, stable pour l'onglet : pas d'auth, mais une mémoire qui tient. */
-function getStudentId() {
-  if (typeof window === "undefined") return "demo-student";
-  let id = window.sessionStorage.getItem("student_id");
-  if (!id) {
-    id = `etu-${Math.random().toString(36).slice(2, 10)}`;
-    window.sessionStorage.setItem("student_id", id);
-  }
-  return id;
-}
+import { getStudentId } from "@/lib/student";
 
 export default function Assistant() {
   const [level, setLevel] = useState<LevelId>("master1");

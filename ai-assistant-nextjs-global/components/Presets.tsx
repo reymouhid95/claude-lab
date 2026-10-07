@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { LevelId } from "./Header";
+import { getStudentId } from "@/lib/student";
 
 export type Preset = {
   id: string;
@@ -30,6 +31,30 @@ export default function Presets({
   onPick: (prompt: string) => void;
 }) {
   const [state, setState] = useState<PresetState>(() => LOADING(level));
+  const [insertedId, setInsertedId] = useState<string | null>(null);
+
+  const handleInsert = (preset: Preset) => {
+    onPick(preset.generationPrompt);
+    setInsertedId(preset.id);
+    window.setTimeout(() => setInsertedId((cur) => (cur === preset.id ? null : cur)), 1800);
+
+    // Fire-and-forget: usage stats must never delay or break the student's flow.
+    void fetch("/api/log-shot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: getStudentId(),
+        student_level: level,
+        preset_id: preset.id,
+        description: {
+          name: preset.name,
+          shotSize: preset.shotSize,
+          focalLength: preset.focalLength,
+          lighting: preset.lighting,
+        },
+      }),
+    }).catch(() => undefined);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -84,10 +109,14 @@ export default function Presets({
               </h3>
               <button
                 type="button"
-                onClick={() => onPick(p.generationPrompt)}
-                className="ml-auto shrink-0 border border-white/15 px-2.5 py-1 font-mono text-[0.7rem] text-mute transition-colors hover:border-amber hover:text-amber"
+                onClick={() => handleInsert(p)}
+                className={`ml-auto shrink-0 border px-2.5 py-1 font-mono text-[0.7rem] transition-colors ${
+                  insertedId === p.id
+                    ? "border-amber bg-amber text-[#0e1418]"
+                    : "border-white/15 text-mute hover:border-amber hover:text-amber"
+                }`}
               >
-                insérer
+                {insertedId === p.id ? "inséré" : "insérer"}
               </button>
             </div>
             <p className="mt-1.5 font-mono text-[0.7rem] leading-relaxed text-mute">
