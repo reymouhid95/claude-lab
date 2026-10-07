@@ -19,12 +19,17 @@ const PANELS: { id: PanelId; label: string }[] = [
   { id: "image", label: "Image" },
 ];
 
+type View = "chat" | PanelId;
+
 export default function Assistant() {
   const [level, setLevel] = useState<LevelId>("master1");
   const [history, setHistory] = useState<Message[]>([]);
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [panel, setPanel] = useState<PanelId>("catalog");
+  // On phones the chat and the panel swap instead of stacking, so the
+  // bottom bar never leaves the student scrolling through the conversation.
+  const [mobileView, setMobileView] = useState<View>("chat");
   const [journalVersion, setJournalVersion] = useState(0);
   const bumpJournal = () => setJournalVersion((v) => v + 1);
   // REC lit la vérité : le chat (loading) et les analyses (analyzing).
@@ -84,8 +89,10 @@ export default function Assistant() {
         busy={busy}
       />
 
-      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 py-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="flex min-h-0 flex-col">
+      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 pt-8 pb-28 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-8">
+        <div
+          className={`${mobileView === "chat" ? "flex" : "hidden"} min-h-0 flex-col lg:flex`}
+        >
           <Chat
             history={history}
             loading={loading}
@@ -97,8 +104,10 @@ export default function Assistant() {
           <div ref={bottomRef} />
         </div>
 
-        <div className="lg:border-l lg:border-white/10 lg:pl-8">
-          <div className="mb-5 flex flex-wrap gap-x-5 gap-y-1">
+        <div
+          className={`${mobileView === "chat" ? "hidden" : ""} lg:block lg:border-l lg:border-white/10 lg:pl-8`}
+        >
+          <div className="mb-5 hidden flex-wrap gap-x-5 gap-y-1 lg:flex">
             {PANELS.map((p) => (
               <button
                 key={p.id}
@@ -122,6 +131,8 @@ export default function Assistant() {
               production={production}
               onPick={(prompt) => {
                 setValue(prompt);
+                // Phone: the composer lives behind the chat tab — show it.
+                setMobileView("chat");
                 inputRef.current?.focus();
               }}
               onLogged={bumpJournal}
@@ -138,6 +149,35 @@ export default function Assistant() {
           )}
         </div>
       </main>
+
+      {/* Phone navigation: fixed bottom bar, replaces the panel tabs. */}
+      <nav
+        aria-label="Sections"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-bezel/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      >
+        <ul className="flex">
+          {([{ id: "chat" as const, label: "Chat" }, ...PANELS]).map((item) => {
+            const active = mobileView === item.id;
+            return (
+              <li key={item.id} className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileView(item.id);
+                    if (item.id !== "chat") setPanel(item.id);
+                  }}
+                  aria-current={active}
+                  className={`flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 font-mono text-[0.62rem] tracking-[0.08em] uppercase transition-colors duration-150 ${
+                    active ? "text-amber" : "text-mute"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 }

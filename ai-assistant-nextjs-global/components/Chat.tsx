@@ -76,7 +76,7 @@ export default function Chat({
 
       <form
         onSubmit={submit}
-        className="sticky bottom-0 flex items-center gap-2 border-t border-white/10 bg-base/95 py-4 shadow-[0_-10px_28px_-18px_rgba(3,6,9,0.9)] backdrop-blur"
+        className="sticky bottom-14 flex items-center gap-2 border-t border-white/10 bg-base/95 py-4 shadow-[0_-10px_28px_-18px_rgba(3,6,9,0.9)] backdrop-blur lg:bottom-0"
       >
         <input
           ref={inputRef}
