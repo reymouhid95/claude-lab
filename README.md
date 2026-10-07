@@ -4,7 +4,7 @@ Progress through the personal-agent course (opencode). An episode is checked
 when its deliverable exists in this lab, committed on its branch, or when
 confirmed by the human (non-main branches of the shared repo).
 
-Last update: 2026-10-06.
+Last update: 2026-10-07.
 
 - [x] E01 — hello lab (`01-hello/`, branch `lab/01-hello`)
 - [x] E02 — confirmed on non-main branches of the shared repo
@@ -33,6 +33,26 @@ Last update: 2026-10-06.
 | `personal-os/` | `master` | `origin/lab/personal-os` |
 | `promptlens/` | `phase-2` (active), `phase-1`, `lab/promptlens` | matching `origin/*` |
 | `screenshots/` | `lab/screenshots` (active) | `origin/lab/screenshots` |
+
+## Assistant deployment (Next 16 + Cloudflare Workers)
+
+Unified assistant for the four Swiss Umef levels — the PromptLens sections
+(research, Journal, Describe, Image) included; replaces the Vite front.
+
+- Live: https://ai-assistant-nextjs-global.thiernooury89.workers.dev
+- Branch `feat/cloudflare-deploy` (`2dadbd1` vinext build → `e04feed`)
+- Stack: Next 16 built by vinext (Vite) into a single Worker; the Flask
+  backend is ported to TypeScript in the route handlers (chat with the
+  `search_vault` tool, presets, log-shot, journal, analyze-text/image,
+  frames) — no Python service in production
+- Data: D1 `ai-assistant` (WEUR, `d1/migrations/`), R2 `promptlens-frames`
+  under the `assistant/` prefix, `GEMINI_API_KEY` as a Worker secret
+- Vault: inlined from `personal-os/vault/` at build time — the repo is
+  public, so the notes are never committed (0 vault files tracked)
+- Deploy: `pnpm build:vinext && pnpm exec cf deploy --prebuilt` (first
+  deploy of a new Worker also needs `--secrets-file <file>`, format
+  `NAME=value`; secrets are set afterwards with `cf workers secrets update`)
+- Free tier only: Workers + D1 + R2, no billing, no card
 
 ## Pending (E14 leftovers)
 
