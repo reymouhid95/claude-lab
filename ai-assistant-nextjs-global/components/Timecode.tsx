@@ -13,25 +13,33 @@ function formatTimecode(totalFrames: number) {
   return `${pad(h)}:${pad(m)}:${pad(s)}:${pad(frames)}`;
 }
 
-/** Timecode de régie : le seul indicateur vivant de l'en-tête. */
-export default function Timecode() {
+/**
+ * Timecode de régie : avance uniquement pendant qu'une requête tourne
+ * (REC actif). Au repos il reste figé — un compteur qui défile sans
+ * raison est du bruit, pas de l'information.
+ */
+export default function Timecode({ active }: { active: boolean }) {
   const [frames, setFrames] = useState(0);
-  const startRef = useRef(0);
+  const lastRef = useRef(0);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
-
-    startRef.current = Date.now();
+    if (!active) return;
+    lastRef.current = Date.now();
     const id = window.setInterval(() => {
-      const elapsed = Date.now() - startRef.current;
-      setFrames(Math.floor((elapsed / 1000) * 25));
+      const now = Date.now();
+      const delta = now - lastRef.current;
+      lastRef.current = now;
+      setFrames((f) => f + Math.round((delta / 1000) * 25));
     }, 80);
     return () => window.clearInterval(id);
-  }, []);
+  }, [active]);
 
   return (
-    <span className="font-mono text-[0.78rem] tracking-tight tabular-nums text-ivory/70">
+    <span
+      className={`font-mono text-[0.78rem] tracking-tight tabular-nums ${
+        active ? "text-ivory/70" : "text-ivory/35"
+      }`}
+    >
       {formatTimecode(frames)}
     </span>
   );

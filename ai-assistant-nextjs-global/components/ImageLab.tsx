@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ShotCard from "./ShotCard";
 import { isShotDescription, type ShotDescription } from "@/lib/shots";
 
@@ -44,9 +44,12 @@ function resize(file: File): Promise<Picked> {
 export default function ImageLab({
   onLogged,
   production,
+  onBusyChange,
 }: {
   onLogged: () => void;
   production?: string;
+  /** Reports analysis activity up to the header REC. */
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -56,6 +59,9 @@ export default function ImageLab({
   const [draft, setDraft] = useState<{ description: ShotDescription; frameId: string } | null>(
     null,
   );
+
+  // Unmounting mid-analysis (tab switch) must not leave REC stuck on.
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
@@ -74,6 +80,7 @@ export default function ImageLab({
     if (!picked || loading) return;
     setLoading(true);
     setError(null);
+    onBusyChange?.(true);
 
     void fetch("/api/analyze-image", {
       method: "POST",
@@ -92,7 +99,10 @@ export default function ImageLab({
         }
       })
       .catch(() => setError("Connexion perdue avec le service d'analyse."))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        onBusyChange?.(false);
+      });
   };
 
   const reset = () => {
@@ -135,7 +145,7 @@ export default function ImageLab({
         type="file"
         accept="image/*"
         onChange={(e) => void pick(e.target.files?.[0])}
-        className="mt-3 block w-full text-[0.8rem] text-mute file:mr-3 file:border file:border-white/15 file:bg-transparent file:px-3 file:py-1.5 file:text-[0.8rem] file:text-ivory hover:file:border-amber"
+        className="mt-3 block w-full text-[0.8rem] text-mute file:mr-3 file:border file:border-white/15 file:bg-transparent file:px-3 file:py-2.5 file:text-[0.8rem] file:text-ivory file:transition-colors file:duration-150 hover:file:border-amber"
       />
 
       {picked && (
@@ -158,7 +168,7 @@ export default function ImageLab({
         type="button"
         onClick={analyze}
         disabled={!picked || loading}
-        className="mt-3 bg-amber px-4 py-2 text-[0.82rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+        className="mt-3 flex min-h-11 items-center justify-center bg-amber px-4 text-[0.82rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
       >
         {loading ? "Analyse…" : "Analyser l'image"}
       </button>

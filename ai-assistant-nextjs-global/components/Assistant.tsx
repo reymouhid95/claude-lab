@@ -27,6 +27,9 @@ export default function Assistant() {
   const [panel, setPanel] = useState<PanelId>("catalog");
   const [journalVersion, setJournalVersion] = useState(0);
   const bumpJournal = () => setJournalVersion((v) => v + 1);
+  // REC lit la vérité : le chat (loading) et les analyses (analyzing).
+  const [analyzing, setAnalyzing] = useState(false);
+  const busy = loading || analyzing;
   const [production, setProduction] = useProduction();
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -78,6 +81,7 @@ export default function Assistant() {
         onLevelChange={setLevel}
         production={production}
         onProductionChange={setProduction}
+        busy={busy}
       />
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 py-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -101,7 +105,7 @@ export default function Assistant() {
                 type="button"
                 onClick={() => setPanel(p.id)}
                 aria-current={panel === p.id}
-                className={`border-b-2 pb-2 text-[0.85rem] font-medium transition-colors ${
+                className={`flex min-h-11 items-end border-b-2 pb-1.5 text-[0.85rem] font-medium transition-colors duration-150 ${
                   panel === p.id
                     ? "border-amber text-ivory"
                     : "border-transparent text-mute hover:text-ivory"
@@ -126,8 +130,12 @@ export default function Assistant() {
           {panel === "journal" && (
             <Journal level={level} version={journalVersion} production={production} />
           )}
-          {panel === "describe" && <Describe onLogged={bumpJournal} production={production} />}
-          {panel === "image" && <ImageLab onLogged={bumpJournal} production={production} />}
+          {panel === "describe" && (
+            <Describe onLogged={bumpJournal} production={production} onBusyChange={setAnalyzing} />
+          )}
+          {panel === "image" && (
+            <ImageLab onLogged={bumpJournal} production={production} onBusyChange={setAnalyzing} />
+          )}
         </div>
       </main>
     </div>

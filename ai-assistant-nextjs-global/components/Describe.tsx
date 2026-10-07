@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ShotCard from "./ShotCard";
 import { isShotDescription, type ShotDescription } from "@/lib/shots";
 
@@ -9,20 +9,27 @@ const MAX_CHARS = 2000;
 export default function Describe({
   onLogged,
   production,
+  onBusyChange,
 }: {
   onLogged: () => void;
   production?: string;
+  /** Reports analysis activity up to the header REC. */
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<ShotDescription | null>(null);
 
+  // Unmounting mid-analysis (tab switch) must not leave REC stuck on.
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+
   const analyze = () => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
     setLoading(true);
     setError(null);
+    onBusyChange?.(true);
 
     void fetch("/api/analyze-text", {
       method: "POST",
@@ -38,7 +45,10 @@ export default function Describe({
         }
       })
       .catch(() => setError("Connexion perdue avec le service d'analyse."))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        onBusyChange?.(false);
+      });
   };
 
   if (draft) {
@@ -75,7 +85,7 @@ export default function Describe({
           type="button"
           onClick={analyze}
           disabled={loading || text.trim().length === 0}
-          className="bg-amber px-4 py-2 text-[0.82rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex min-h-11 items-center justify-center bg-amber px-4 text-[0.82rem] font-semibold text-[#0e1418] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
         >
           {loading ? "Analyse…" : "Analyser"}
         </button>

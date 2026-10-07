@@ -117,7 +117,7 @@ export default function Presets({
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Rechercher : gros plan, contre-plongée, nuit…"
         aria-label="Rechercher un preset"
-        className="mt-3 w-full border border-white/15 bg-bezel px-3 py-2 text-[0.85rem] text-ivory placeholder:text-mute/80 focus:border-amber"
+        className="mt-3 w-full border border-white/15 bg-bezel px-3 py-2.5 text-[0.85rem] text-ivory transition-colors duration-150 placeholder:text-mute/80 focus:border-amber"
       />
 
       {view.status === "error" && (
@@ -142,7 +142,7 @@ export default function Presets({
               <button
                 type="button"
                 onClick={() => handleInsert(p)}
-                className={`ml-auto shrink-0 border px-2.5 py-1 font-mono text-[0.7rem] transition-colors ${
+                className={`ml-auto flex min-h-11 shrink-0 items-center border px-3 font-mono text-[0.7rem] transition-colors duration-150 ${
                   insertedId === p.id
                     ? "border-amber bg-amber text-[#0e1418]"
                     : "border-white/15 text-mute hover:border-amber hover:text-amber"
