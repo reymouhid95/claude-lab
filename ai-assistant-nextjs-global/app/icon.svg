@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Record mark: lens ring + REC dot, the app's identity at 16px. -->
+  <rect width="64" height="64" rx="14" fill="#0e1418" />
+  <circle cx="32" cy="32" r="18" fill="none" stroke="#ff7a18" stroke-width="4" opacity="0.35" />
+  <circle cx="32" cy="32" r="9.5" fill="#ff7a18" />
+</svg>

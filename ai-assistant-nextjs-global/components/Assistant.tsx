@@ -81,6 +81,12 @@ export default function Assistant() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <a
+        href="#contenu"
+        className="sr-only bg-amber px-4 py-2 text-[0.9rem] font-semibold text-[#0e1418] focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-40"
+      >
+        Aller au contenu
+      </a>
       <Header
         level={level}
         onLevelChange={setLevel}
@@ -89,7 +95,10 @@ export default function Assistant() {
         busy={busy}
       />
 
-      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 pt-8 pb-28 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-8">
+      <main
+        id="contenu"
+        className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 pt-8 pb-28 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-8"
+      >
         <div
           className={`${mobileView === "chat" ? "flex" : "hidden"} min-h-0 flex-col lg:flex`}
         >
