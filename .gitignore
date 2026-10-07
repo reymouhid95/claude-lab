@@ -1,3 +1,12 @@
 *
 !.gitignore
 !README.md
+
+# AI Assistant — Next.js 16 app (whitelisted for versioning)
+!ai-assistant-nextjs-global/
+!ai-assistant-nextjs-global/**
+
+# never commit build output or dependencies
+ai-assistant-nextjs-global/node_modules/
+ai-assistant-nextjs-global/.next/
+ai-assistant-nextjs-global/.env*

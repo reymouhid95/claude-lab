@@ -1,0 +1,58 @@
+"use client";
+
+import Timecode from "./Timecode";
+
+export const LEVELS = [
+  { id: "master1", label: "Master 1 — IA & Cybersécurité" },
+  { id: "master2", label: "Master 2 — Cybersécurité" },
+  { id: "licence", label: "Licence — Multimédia" },
+  { id: "alternance", label: "Alternance — ATA SUARL" },
+] as const;
+
+export type LevelId = (typeof LEVELS)[number]["id"];
+
+export default function Header({
+  level,
+  onLevelChange,
+}: {
+  level: LevelId;
+  onLevelChange: (level: LevelId) => void;
+}) {
+  return (
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-bezel/95 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3">
+        <div className="flex items-center gap-2.5">
+          <span className="rec-dot inline-block size-2.5 rounded-full bg-amber" aria-hidden />
+          <span className="font-mono text-[0.7rem] font-medium tracking-[0.14em] text-amber">
+            REC
+          </span>
+          <Timecode />
+        </div>
+
+        <div className="mr-auto flex items-baseline gap-2">
+          <span className="font-display text-[1.05rem] font-bold tracking-tight text-ivory">
+            Assistant Production Vidéo
+          </span>
+          <span className="hidden font-mono text-[0.72rem] text-mute sm:inline">
+            ATA SUARL × Swiss Umef
+          </span>
+        </div>
+
+        <label className="flex items-center gap-2">
+          <span className="font-mono text-[0.7rem] text-mute">niveau</span>
+          <select
+            value={level}
+            onChange={(e) => onLevelChange(e.target.value as LevelId)}
+            className="max-w-[13rem] cursor-pointer truncate border border-white/15 bg-bezel-2 px-2.5 py-1.5 text-[0.82rem] text-ivory hover:border-amber/60"
+          >
+            {LEVELS.map((l) => (
+              <option key={l.id} value={l.id} className="bg-bezel text-ivory">
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </header>
+  );
+}

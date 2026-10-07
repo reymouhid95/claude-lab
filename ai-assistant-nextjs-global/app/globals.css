@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  /* Régie / salle de montage : nuit d'étalonnage, pas noir pur */
+  --color-base: #0e1418;
+  --color-bezel: #18202a;
+  --color-bezel-2: #212b37;
+  --color-ivory: #ede7da;
+  --color-amber: #ff7a18;
+  --color-mute: #8b95a1;
+
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-amber);
+  color: var(--color-base);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}
+
+/* Témoin REC : le seul mouvement non déclenché par l'utilisateur */
+@keyframes rec-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+.rec-dot {
+  animation: rec-blink 1.4s steps(1, end) infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-dot,
+  .rise {
+    animation: none;
+  }
+}
