@@ -87,7 +87,7 @@ export default function Presets({
                 onClick={() => onPick(p.generationPrompt)}
                 className="ml-auto shrink-0 border border-white/15 px-2.5 py-1 font-mono text-[0.7rem] text-mute transition-colors hover:border-amber hover:text-amber"
               >
-                utiliser
+                insérer
               </button>
             </div>
             <p className="mt-1.5 font-mono text-[0.7rem] leading-relaxed text-mute">
