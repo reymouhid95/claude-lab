@@ -14,9 +14,13 @@ export type LevelId = (typeof LEVELS)[number]["id"];
 export default function Header({
   level,
   onLevelChange,
+  production,
+  onProductionChange,
 }: {
   level: LevelId;
   onLevelChange: (level: LevelId) => void;
+  production: string;
+  onProductionChange: (value: string) => void;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-bezel/95 backdrop-blur">
@@ -37,6 +41,18 @@ export default function Header({
             ATA SUARL × Swiss Umef
           </span>
         </div>
+
+        <label className="flex items-center gap-2">
+          <span className="font-mono text-[0.7rem] text-mute">production</span>
+          <input
+            type="text"
+            value={production}
+            onChange={(e) => onProductionChange(e.target.value)}
+            placeholder="Ma production"
+            aria-label="Production courante"
+            className="w-32 border border-white/15 bg-bezel-2 px-2.5 py-1.5 text-[0.82rem] text-ivory placeholder:text-mute/80 hover:border-amber/60 focus:border-amber sm:w-40"
+          />
+        </label>
 
         <label className="flex items-center gap-2">
           <span className="font-mono text-[0.7rem] text-mute">niveau</span>

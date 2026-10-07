@@ -8,9 +8,12 @@ Intègre les presets shots adaptés aux étudiants Swiss Umef
 import os
 import re
 import json
+import uuid
+import base64
+import binascii
 import sqlite3
 from pathlib import Path
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 
 from agents import Agent, Runner, SQLiteSession, function_tool
 from agents.extensions.models.litellm_provider import LitellmModel
@@ -321,6 +324,16 @@ def init_db():
             shot_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )"""
     )
+    # Journal upgrades: entries come from a preset, a text or an image, and
+    # belong to a production.
+    existing_columns = {row[1] for row in c.execute("PRAGMA table_info(logged_shots)")}
+    for column, declaration in (
+        ("source", "TEXT DEFAULT 'preset'"),
+        ("production", "TEXT"),
+        ("frame_id", "TEXT"),
+    ):
+        if column not in existing_columns:
+            c.execute(f"ALTER TABLE logged_shots ADD COLUMN {column} {declaration}")
     conn.commit()
     conn.close()
 
@@ -475,6 +488,11 @@ def log_shot():
         student_level = data.get("student_level", "master1")
         preset_id = data.get("preset_id")
         description = data.get("description", {})
+        source = data.get("source", "preset")
+        production = data.get("production")
+        frame_id = data.get("frame_id")
+        if source not in ("preset", "text", "image"):
+            source = "preset"
 
         session_key = f"{student_id}-{student_level}"
 
@@ -493,8 +511,16 @@ def log_shot():
         )
 
         c.execute(
-            "INSERT INTO logged_shots (student_id, student_level, preset_id, description_json) VALUES (?, ?, ?, ?)",
-            (student_id, student_level, preset_id, json.dumps(description) if description else None),
+            "INSERT INTO logged_shots (student_id, student_level, preset_id, description_json, source, production, frame_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                student_id,
+                student_level,
+                preset_id,
+                json.dumps(description) if description else None,
+                source,
+                production,
+                frame_id,
+            ),
         )
         conn.commit()
         conn.close()
@@ -505,6 +531,190 @@ def log_shot():
     except Exception as e:
         print(f"⚠️ Erreur log-shot: {e}")
         return jsonify({"error": str(e), "success": False}), 500
+
+
+@app.route("/api/journal", methods=["GET"])
+def journal():
+    """Journal des plans de l'étudiant, du plus récent au plus ancien."""
+    try:
+        student_id = request.args.get("student_id", "demo-student")
+        level = request.args.get("level")
+        production = request.args.get("production")
+        try:
+            limit = max(1, min(int(request.args.get("limit", "50")), 200))
+        except ValueError:
+            limit = 50
+
+        conn = sqlite3.connect("/home/rey/claude-lab/vault/agent_memory.db")
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        sql = (
+            "SELECT id, student_level, preset_id, description_json, source, production, "
+            "frame_id, shot_timestamp FROM logged_shots WHERE student_id = ?"
+        )
+        params = [student_id]
+        if level:
+            sql += " AND student_level = ?"
+            params.append(level)
+        if production:
+            sql += " AND production = ?"
+            params.append(production)
+        sql += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+        rows = [dict(row) for row in c.execute(sql, params)]
+        conn.close()
+
+        for row in rows:
+            raw = row.pop("description_json", None)
+            try:
+                row["description"] = json.loads(raw) if raw else None
+            except (TypeError, json.JSONDecodeError):
+                row["description"] = None
+
+        return jsonify({"count": len(rows), "entries": rows})
+    except Exception as e:
+        print(f"⚠️ Erreur journal: {e}")
+        return jsonify({"error": str(e), "entries": []}), 500
+
+
+# === Analyse de plan (contrat repris de PromptLens : SYSTEM_PROMPT + schéma) ===
+SHOT_SYSTEM_PROMPT = (
+    "You are a cinematography reference analyst for AI video productions. "
+    "From the user's shot description or reference image, produce a JSON object with: "
+    "shotSize (e.g. gros plan, plan large), cameraAngle, focalLengthMm (a plausible "
+    "lens in millimetres), lighting (setup and quality), palette (3 to 6 dominant "
+    "hex colors as #RRGGBB), mood, generationPrompt (a self-contained English "
+    "prompt that recreates the shot), confidence (0 to 1). "
+    "Answer with JSON only, matching the requested schema exactly."
+)
+
+HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def looks_like_description(value):
+    """Narrow Gemini's answer at the API boundary before trusting it."""
+    if not isinstance(value, dict):
+        return False
+    palette = value.get("palette")
+    return (
+        isinstance(value.get("shotSize"), str)
+        and isinstance(value.get("cameraAngle"), str)
+        and isinstance(value.get("focalLengthMm"), (int, float))
+        and not isinstance(value.get("focalLengthMm"), bool)
+        and isinstance(value.get("lighting"), str)
+        and isinstance(palette, list)
+        and 1 <= len(palette) <= 8
+        and all(isinstance(c, str) and HEX_COLOR.match(c) for c in palette)
+        and isinstance(value.get("mood"), str)
+        and isinstance(value.get("generationPrompt"), str)
+        and len(value.get("generationPrompt", "")) >= 10
+        and isinstance(value.get("confidence"), (int, float))
+        and 0 <= value.get("confidence", -1) <= 1
+    )
+
+
+def describe_shot(user_content):
+    """Appelle Gemini et renvoie une ShotDescription validée, ou lève ValueError."""
+    import litellm
+
+    response = litellm.completion(
+        model="gemini/gemini-flash-lite-latest",
+        messages=[
+            {"role": "system", "content": SHOT_SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ],
+        temperature=0.3,
+        response_format={"type": "json_object"},
+    )
+    raw = response.choices[0].message.content or ""
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Le modèle n'a pas renvoyé de JSON.") from exc
+    if not looks_like_description(data):
+        raise ValueError("La fiche renvoyée est incomplète. Reformule ou réessaie.")
+    return data
+
+
+FRAMES_DIR = Path("/home/rey/claude-lab/ai-assistant/standalone-server/frames")
+MAX_IMAGE_BYTES = 4 * 1024 * 1024
+
+
+@app.route("/api/analyze-text", methods=["POST"])
+def analyze_text():
+    """Décrire une prise en texte → fiche de plan exploitable."""
+    try:
+        data = request.get_json(silent=True) or {}
+        text = (data.get("text") or "").strip()
+        if not text:
+            return jsonify({"error": "Texte requis."}), 400
+        if len(text) > 2000:
+            return jsonify({"error": "2000 caractères maximum."}), 400
+        description = describe_shot(f"Analyze this shot description: {text}")
+        return jsonify({"success": True, "description": description})
+    except ValueError as e:
+        return jsonify({"error": str(e), "success": False}), 502
+    except Exception as e:
+        print(f"⚠️ Erreur analyze-text: {e}")
+        return jsonify({"error": "Analyse indisponible pour le moment.", "success": False}), 502
+
+
+@app.route("/api/analyze-image", methods=["POST"])
+def analyze_image():
+    """Image de référence → fiche de plan + frame stockée localement."""
+    try:
+        data = request.get_json(silent=True) or {}
+        image_b64 = data.get("imageBase64") or ""
+        mime_type = data.get("mimeType") or ""
+        if not image_b64:
+            return jsonify({"error": "Image requise."}), 400
+        if mime_type not in ("image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"):
+            return jsonify({"error": "Format non supporté."}), 400
+
+        padded = image_b64 + "=" * (-len(image_b64) % 4)
+        try:
+            # validate=True: without it b64decode silently drops invalid chars
+            # and an empty payload would reach the model.
+            content = base64.b64decode(padded, validate=True)
+        except (ValueError, binascii.Error):
+            return jsonify({"error": "Base64 invalide."}), 400
+        if not content:
+            return jsonify({"error": "Image vide."}), 400
+        if len(content) > MAX_IMAGE_BYTES:
+            return jsonify({"error": "Image trop volumineuse : 4 Mo maximum."}), 413
+
+        description = describe_shot(
+            [
+                {"type": "text", "text": "Analyze the shot shown in this reference image."},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime_type};base64,{image_b64}"},
+                },
+            ]
+        )
+
+        frame_id = f"{uuid.uuid4().hex}.{mime_type.split('/')[1]}"
+        FRAMES_DIR.mkdir(parents=True, exist_ok=True)
+        (FRAMES_DIR / frame_id).write_bytes(content)
+
+        return jsonify({"success": True, "description": description, "frameId": frame_id})
+    except ValueError as e:
+        return jsonify({"error": str(e), "success": False}), 502
+    except Exception as e:
+        print(f"⚠️ Erreur analyze-image: {e}")
+        return jsonify({"error": "Analyse indisponible pour le moment.", "success": False}), 502
+
+
+@app.route("/api/frames/<frame_id>", methods=["GET"])
+def get_frame(frame_id):
+    """Sert une frame enregistrée (pas de traversée de répertoire)."""
+    if not re.fullmatch(r"[0-9a-f]{32}\.[a-z0-9]+", frame_id):
+        return jsonify({"error": "Identifiant invalide."}), 400
+    path = FRAMES_DIR / frame_id
+    if not path.is_file():
+        return jsonify({"error": "Frame introuvable."}), 404
+    mime = "image/" + frame_id.rsplit(".", 1)[1]
+    return send_file(path, mimetype=mime, max_age=86400)
 
 
 # Point d'entrée

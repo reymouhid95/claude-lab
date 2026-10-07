@@ -11,9 +11,10 @@
 !ai-assistant/standalone-server/
 !ai-assistant/standalone-server/**
 
-# never commit build output or dependencies
+# never commit build output or dependencies or user data
 ai-assistant-nextjs-global/node_modules/
 ai-assistant-nextjs-global/.next/
 ai-assistant-nextjs-global/.env*
 ai-assistant/**/node_modules/
 ai-assistant/**/.env*
+ai-assistant/standalone-server/frames/

@@ -25,13 +25,18 @@ const LOADING = (level: LevelId): PresetState => ({ level, status: "loading", pr
 
 export default function Presets({
   level,
+  production,
   onPick,
+  onLogged,
 }: {
   level: LevelId;
+  production?: string;
   onPick: (prompt: string) => void;
+  onLogged?: () => void;
 }) {
   const [state, setState] = useState<PresetState>(() => LOADING(level));
   const [insertedId, setInsertedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const handleInsert = (preset: Preset) => {
     onPick(preset.generationPrompt);
@@ -46,6 +51,8 @@ export default function Presets({
         student_id: getStudentId(),
         student_level: level,
         preset_id: preset.id,
+        source: "preset",
+        production: production || null,
         description: {
           name: preset.name,
           shotSize: preset.shotSize,
@@ -53,7 +60,9 @@ export default function Presets({
           lighting: preset.lighting,
         },
       }),
-    }).catch(() => undefined);
+    })
+      .then((r) => r.ok && onLogged?.())
+      .catch(() => undefined);
   };
 
   useEffect(() => {
@@ -82,16 +91,34 @@ export default function Presets({
   // Pendant le chargement d'un autre niveau, on garde l'état du niveau précédent.
   const view = state.level === level ? state : LOADING(level);
 
+  const needle = query.trim().toLowerCase();
+  const visible = needle
+    ? view.presets.filter((p) =>
+        [p.name, p.shotSize, p.lighting, p.cameraAngle, p.mood, p.focalLength]
+          .join(" ")
+          .toLowerCase()
+          .includes(needle),
+      )
+    : view.presets;
+
   return (
     <aside className="min-w-0">
-      <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
-        <h2 className="font-display text-[0.95rem] font-bold tracking-tight text-ivory">
-          Catalogue de plans
-        </h2>
+      <div className="flex justify-end pb-1">
         <span className="font-mono text-[0.7rem] text-mute">
-          {view.status === "loading" ? "chargement" : `${view.presets.length} presets`}
+          {view.status === "loading"
+            ? "chargement"
+            : `${visible.length} / ${view.presets.length} presets`}
         </span>
       </div>
+
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Rechercher : gros plan, contre-plongée, nuit…"
+        aria-label="Rechercher un preset"
+        className="mt-3 w-full border border-white/15 bg-bezel px-3 py-2 text-[0.85rem] text-ivory placeholder:text-mute/80 focus:border-amber"
+      />
 
       {view.status === "error" && (
         <p className="pt-4 text-[0.85rem] leading-relaxed text-mute">
@@ -101,7 +128,12 @@ export default function Presets({
       )}
 
       <ul className="divide-y divide-white/10">
-        {view.presets.map((p) => (
+        {visible.length === 0 && view.status === "ready" && (
+          <li className="py-5 text-[0.85rem] leading-relaxed text-mute">
+            Aucun preset ne correspond à «&nbsp;{query.trim()}&nbsp;».
+          </li>
+        )}
+        {visible.map((p) => (
           <li key={p.id} className="group py-3.5">
             <div className="flex items-baseline gap-3">
               <h3 className="font-display text-[0.95rem] font-semibold leading-tight text-ivory">

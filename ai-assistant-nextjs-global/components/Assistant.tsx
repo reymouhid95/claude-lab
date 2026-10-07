@@ -2,15 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import Chat, { type Message } from "./Chat";
+import Describe from "./Describe";
 import Header, { type LevelId } from "./Header";
+import ImageLab from "./ImageLab";
+import Journal from "./Journal";
 import Presets from "./Presets";
 import { getStudentId } from "@/lib/student";
+import { useProduction } from "@/lib/production";
+
+type PanelId = "catalog" | "journal" | "describe" | "image";
+
+const PANELS: { id: PanelId; label: string }[] = [
+  { id: "catalog", label: "Catalogue" },
+  { id: "journal", label: "Journal" },
+  { id: "describe", label: "Décrire" },
+  { id: "image", label: "Image" },
+];
 
 export default function Assistant() {
   const [level, setLevel] = useState<LevelId>("master1");
   const [history, setHistory] = useState<Message[]>([]);
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [panel, setPanel] = useState<PanelId>("catalog");
+  const [journalVersion, setJournalVersion] = useState(0);
+  const bumpJournal = () => setJournalVersion((v) => v + 1);
+  const [production, setProduction] = useProduction();
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +73,12 @@ export default function Assistant() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header level={level} onLevelChange={setLevel} />
+      <Header
+        level={level}
+        onLevelChange={setLevel}
+        production={production}
+        onProductionChange={setProduction}
+      />
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-x-10 gap-y-10 px-5 py-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-h-0 flex-col">
@@ -72,7 +94,40 @@ export default function Assistant() {
         </div>
 
         <div className="lg:border-l lg:border-white/10 lg:pl-8">
-          <Presets level={level} onPick={(prompt) => { setValue(prompt); inputRef.current?.focus(); }} />
+          <div className="mb-5 flex flex-wrap gap-x-5 gap-y-1">
+            {PANELS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPanel(p.id)}
+                aria-current={panel === p.id}
+                className={`border-b-2 pb-2 text-[0.85rem] font-medium transition-colors ${
+                  panel === p.id
+                    ? "border-amber text-ivory"
+                    : "border-transparent text-mute hover:text-ivory"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {panel === "catalog" && (
+            <Presets
+              level={level}
+              production={production}
+              onPick={(prompt) => {
+                setValue(prompt);
+                inputRef.current?.focus();
+              }}
+              onLogged={bumpJournal}
+            />
+          )}
+          {panel === "journal" && (
+            <Journal level={level} version={journalVersion} production={production} />
+          )}
+          {panel === "describe" && <Describe onLogged={bumpJournal} production={production} />}
+          {panel === "image" && <ImageLab onLogged={bumpJournal} production={production} />}
         </div>
       </main>
     </div>
