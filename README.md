@@ -37,14 +37,20 @@ Last update: 2026-10-07.
 ## Assistant deployment (Next 16 + Cloudflare Workers)
 
 Unified assistant for the four Swiss Umef levels — the PromptLens sections
-(research, Journal, Describe, Image) included; replaces the Vite front.
+(research, Journal, Describe, Image) included; replaces the Vite front and
+the Flask backend (no Python service in production).
 
 - Live: https://ai-assistant-nextjs-global.thiernooury89.workers.dev
-- Branch `feat/cloudflare-deploy` (`2dadbd1` vinext build → `e04feed`)
+- Branch `feat/ui-refresh` (pushed): v2 UI refresh on top of
+  `feat/cloudflare-deploy` (vinext migration `2dadbd1` → deploy `e04feed`)
+- UI v2 (2026-10-07): REC indicator + timecode wired to real activity
+  (frozen at rest), 44px touch targets, fixed bottom nav on phones,
+  hover/focus/press feedback, film grain + tinted shadows, branded
+  favicon/og:image, skip link
 - Stack: Next 16 built by vinext (Vite) into a single Worker; the Flask
   backend is ported to TypeScript in the route handlers (chat with the
   `search_vault` tool, presets, log-shot, journal, analyze-text/image,
-  frames) — no Python service in production
+  frames)
 - Data: D1 `ai-assistant` (WEUR, `d1/migrations/`), R2 `promptlens-frames`
   under the `assistant/` prefix, `GEMINI_API_KEY` as a Worker secret
 - Vault: inlined from `personal-os/vault/` at build time — the repo is
@@ -54,29 +60,3 @@ Unified assistant for the four Swiss Umef levels — the PromptLens sections
   `NAME=value`; secrets are set afterwards with `cf workers secrets update`)
 - Free tier only: Workers + D1 + R2, no billing, no card
 
-## Pending (E14 leftovers)
-
-- ~~H-1 callable auth~~ — done 2026-10-06 (`ab7e04c`, anonymous sign-in +
-  `requireAuth` guard; App Check still deferred until a real project)
-- ~~M-4 `users/{uid}/entries/{id}` structure~~ — done 2026-10-06
-  (`20f825e`, per-user subtree + owner-only `firestore.rules`, edited but
-  not deployed until the first real deploy)
-- ~~M-5 real Firebase project config~~ — done 2026-10-06: `promptlens-prod`
-  created (alias `prod`), web app + `.env.local` (gitignored) wired via
-  `VITE_FIREBASE_*`, Firestore database (`europe-west1`), M-4 rules
-  released, first hosting release at https://promptlens-prod.web.app
-- ~~Frame storage on Cloudflare R2~~ — done 2026-10-06 (`162579b`): private
-  bucket `promptlens-frames`, Worker routes `POST /frames` (auth) /
-  `GET /frames/:key`, `Entry.frameId` + journal thumbnails (8/8 probes OK)
-- ~~Version this tracker~~ — done 2026-10-06: this README lives in
-  `reymouhid95/claude-lab` (only `README.md` tracked, sub-repos ignored)
-- ~~Revoke the GitHub PAT used for lab pushes~~ — done 2026-10-06 (revoked
-  from the GitHub UI; the next push needs a fresh PAT)
-- M-6 first full deploy — **split outcome** 2026-10-06:
-  - ✅ Anonymous provider live (console), Gemini analysis live in
-    production via Cloudflare Worker `promptlens-gemini` (free tier, no
-    billing): https://promptlens-gemini.thiernooury89.workers.dev
-    (Firebase ID token required, probe 401/400/200 OK)
-  - ❌ still waiting on an **open billing account** (card declined):
-    Firebase functions deploy (Cloud Build) + App Check — gen1 conversion
-    tried & reverted, firebase-tools needs Cloud Build either way
