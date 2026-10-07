@@ -55,7 +55,7 @@ export default function ShotCard({
   ];
 
   return (
-    <div className="border-l-2 border-amber/70 bg-bezel">
+    <div className="border-l-2 border-amber/70 bg-bezel shadow-[0_8px_32px_-16px_rgba(3,6,9,0.95)]">
       <dl className="divide-y divide-white/8 px-4">
         {rows.map(([label, value]) => (
           <div key={label} className="flex gap-3 py-2">

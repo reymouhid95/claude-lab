@@ -48,8 +48,8 @@ export default function Chat({
               <div
                 className={
                   msg.role === "user"
-                    ? "max-w-[85%] bg-amber px-4 py-2.5 text-[0.95rem] leading-relaxed text-[#0e1418] sm:max-w-[75%]"
-                    : "max-w-[92%] border-l-2 border-white/15 bg-bezel px-4 py-2.5 text-[0.95rem] leading-relaxed text-ivory sm:max-w-[85%]"
+                    ? "max-w-[85%] bg-amber px-4 py-2.5 text-[0.95rem] leading-relaxed text-[#0e1418] shadow-[0_2px_14px_-6px_rgba(255,122,24,0.5)] sm:max-w-[75%]"
+                    : "max-w-[92%] border-l-2 border-white/15 bg-bezel px-4 py-2.5 text-[0.95rem] leading-relaxed text-ivory shadow-[0_4px_20px_-10px_rgba(6,10,16,0.9)] sm:max-w-[85%]"
                 }
               >
                 {msg.content}
@@ -76,7 +76,7 @@ export default function Chat({
 
       <form
         onSubmit={submit}
-        className="sticky bottom-0 flex items-center gap-2 border-t border-white/10 bg-base/95 py-4 backdrop-blur"
+        className="sticky bottom-0 flex items-center gap-2 border-t border-white/10 bg-base/95 py-4 shadow-[0_-10px_28px_-18px_rgba(3,6,9,0.9)] backdrop-blur"
       >
         <input
           ref={inputRef}

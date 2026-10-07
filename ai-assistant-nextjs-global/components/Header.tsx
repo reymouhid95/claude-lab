@@ -26,7 +26,7 @@ export default function Header({
   busy: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-bezel/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-bezel/95 shadow-[0_1px_0_0_rgba(255,255,255,0.04),0_14px_36px_-18px_rgba(3,6,9,0.9)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3">
         <div className="flex items-center gap-2.5">
           {/* REC is truthful: lit only while a request is running, dim at rest. */}
